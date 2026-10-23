@@ -135,8 +135,10 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
           <label class="chk" for="mclear"><input type="checkbox" id="mclear"><span>Осветлённое стекло</span></label>
           <label class="chk" for="mlamp"><input type="checkbox" id="mlamp"><span>Сенсор под светильники клиента<small>для зеркала без подсветки</small></span></label>
           <label class="chk" for="malice"><input type="checkbox" id="malice"><span>Колонка с Алисой<small>толщина зеркала 4 см</small></span></label>
+          <label class="chk" for="mfacet"><input type="checkbox" id="mfacet"><span>Фацет по краю<small>+15%</small></span></label>
+          <label class="chk" for="mtint"><input type="checkbox" id="mtint"><span>Тонированное стекло<small>бронза, графит</small></span></label>
         </div>
-        <p class="note">Круг: ширина = диаметр. Монтаж, доставка, рамы, фацет и нестандартные формы — уточняйте у производства.</p>
+        <p class="note">Круг: ширина = диаметр. Рамы и нестандартные формы (арка, овал, фигурные вырезы) — уточняйте у производства.</p>
       </fieldset>
 
       <fieldset class="furn-only">
@@ -173,6 +175,19 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
           <label class="chk tumba-only" for="hidden"><input type="checkbox" id="hidden"><span>Скрытый ящик<small>+5 000 ₽</small></span></label>
           <label class="chk furn-only" for="light"><input type="checkbox" id="light"><span>Подсветка врезная<small>+4 000 ₽ за секцию</small></span></label>
           <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small>мебель +10%, зеркала по безналичной цене</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Доставка и монтаж</legend>
+        <div class="chks">
+          <label class="chk" for="sdeliv"><input type="checkbox" id="sdeliv"><span>Доставка по Москве<small id="sdeliv-note">2 500 ₽</small></span></label>
+          <label class="chk" for="smount"><input type="checkbox" id="smount"><span>Монтаж<small id="smount-note">10% от стоимости изделия</small></span></label>
+          <label class="chk mirror-only" for="sdemount" hidden><input type="checkbox" id="sdemount"><span>Демонтаж старого зеркала<small>6 500 ₽</small></span></label>
+          <label class="chk mirror-only" for="smeasure" hidden><input type="checkbox" id="smeasure"><span>Замер<small>3 500 ₽, Москва, по субботам</small></span></label>
+        </div>
+        <div class="row">
+          <label class="f" for="skm">Км за МКАД<input type="number" id="skm" min="0" max="300" value="0"></label>
+          <label class="f" for="sfloors">Подъём по лестнице, этажей<input type="number" id="sfloors" min="0" max="30" value="0"></label>
         </div>
       </fieldset>
     </form>
@@ -243,8 +258,10 @@ function calcMirror(w, h) {
   else if (t === 'd5') base = 18700 + 5100 * a;
   else base = Math.max(2550, (t === 'sheet4' ? 7650 : 11050) * a);
   if ($('mclear').checked && t !== 'sheet4') base *= 1.1;
+  if ($('mfacet').checked) base *= 1.15;
   const shapeName = shape === 'round' ? ', скруглённые углы' : '';
-  add(`Зеркало ${M_NAME[t]}, ${size} мм${shapeName}${$('mclear').checked ? ', осветлённое' : ''}`, base);
+  const glass = $('mtint').checked ? ', тонированное' : $('mclear').checked ? ', осветлённое' : '';
+  add(`Зеркало ${M_NAME[t]}, ${size} мм${shapeName}${glass}${$('mfacet').checked ? ', фацет' : ''}`, base);
   if (shape === 'circle' && t !== 'sheet4' && t !== 'sheet6') add('Круглая форма', 1700);
   if (lit) {
     if (t === 'both') add('Вторая линия подсветки', 1700);
@@ -298,7 +315,9 @@ function calc() {
 
   const cash = lines.reduce((s, l) => s + l[1], 0);
   const beznal = $('beznal').checked;
-  const pay = beznal ? Math.round(cash * 1.1 / 1000) * 1000 : cash;
+  const svc = services(false, cash, 0);
+  lines.push(...svc);
+  const pay = (beznal ? Math.round(cash * 1.1 / 1000) * 1000 : cash) + svc.reduce((s, l) => s + l[1], 0);
   let days = (mat === 'emal' || mat === 'shpon') ? 45 : 30;
   if ($('freza').checked) days += 14;
   if ($('ral').checked) days = Math.max(days, 45);
@@ -320,6 +339,19 @@ function calc() {
     `Предоплата 70%: ${rub(prepay)}`, `Срок изготовления: ~${days} дней`].join('\n');
 }
 
+// Услуги — по себестоимости, без наценки и без надбавки за безнал (оплата наличными / переводом).
+function services(mirror, goods, area) {
+  const out = [];
+  const km = Math.max(0, num('skm', 0)), floors = Math.max(0, num('sfloors', 0));
+  if ($('sdeliv').checked) out.push(['Доставка по Москве' + (km ? ` + ${km} км за МКАД` : ''),
+    mirror ? 5500 + 100 * km : 2500 + 40 * km]);
+  if ($('smount').checked) out.push(['Монтаж', mirror ? (area > 1.5 ? 12000 : 8500) : r100(Math.max(4500, goods * 0.1))]);
+  if (mirror && $('sdemount').checked) out.push(['Демонтаж старого зеркала', 6500]);
+  if (mirror && $('smeasure').checked) out.push(['Замер', 3500]);
+  if (floors > 0) out.push([`Подъём по лестнице: ${floors} эт.`, (mirror ? 1000 : 500) * floors]);
+  return out;
+}
+
 function render(lines, pay, beznal, prepay, days) {
   $('lines').replaceChildren(...lines.map(([n, s]) => {
     const d = document.createElement('div'); d.className = 'line';
@@ -338,7 +370,10 @@ function calcMirrorTotal() {
   const h = Math.max(200, num('height', 1000));
   const beznal = $('beznal').checked;
   const f = beznal ? MB : 1;
-  const lines = calcMirror(w, h).map(([n, s]) => [n, r100(s * f)]);
+  const goods = calcMirror(w, h).map(([n, s]) => [n, r100(s * f)]);
+  const shape = document.querySelector('input[name=mshape]:checked').value;
+  const area = w * (shape === 'circle' ? w : h) / 1e6;
+  const lines = goods.concat(services(true, 0, area));
   const pay = lines.reduce((s, l) => s + l[1], 0);
   const prepay = Math.ceil(pay * 0.7 / 1000) * 1000;
   const days = '~14–16 дней';
@@ -363,6 +398,8 @@ function update() {
   document.querySelectorAll('.tumba-only').forEach(el => { el.hidden = pen || mirror; });
   document.querySelectorAll('.furn-only').forEach(el => { el.hidden = mirror; });
   document.querySelectorAll('.mirror-only').forEach(el => { el.hidden = !mirror; });
+  $('sdeliv-note').textContent = mirror ? '5 500 ₽, за МКАД +100 ₽/км' : '2 500 ₽, за МКАД +40 ₽/км';
+  $('smount-note').textContent = mirror ? '8 500 ₽, большое (от 1,5 м²) 12 000 ₽' : '10% от стоимости, от 4 500 ₽';
   text = calc();
   $('copied').textContent = '';
 }
