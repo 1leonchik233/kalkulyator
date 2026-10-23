@@ -496,8 +496,16 @@ function drawSketch(item) {
   const handle = (x, y, w) => line(x + w * 0.35, y + 6, x + w * 0.65, y + 6, 'stroke-width="3" stroke-linecap="round" opacity=".55"');
 
   if (item === 'tumba' || item === 'pen') {
-    const realH = H;
-    const b = box(W, realH), x = X0, y = Y0;
+    const realH = H, Dp = Math.max(150, num('fdepth', item === 'pen' ? 400 : 470));
+    // вид спереди + вид сбоку в одном масштабе
+    const sc = Math.min(300 / (W + Dp + 260), 210 / realH);
+    const b = { s: sc, w: W * sc, h: realH * sc }, x = X0, y = Y0;
+    const sx = x + b.w + 44, sw = Dp * sc;
+    rect(sx, y, sw, b.h, thick);
+    line(sx + sw - 3, y, sx + sw - 3, y + b.h, 'stroke-width="1" opacity=".5"');
+    dimH(sx, sx + sw, y + b.h + 14, `${Dp}`);
+    txt(x + b.w / 2, y + b.h + 44, 'спереди', 'opacity=".6"');
+    txt(sx + sw / 2, y + b.h + 44, 'сбоку', 'opacity=".6"');
     const drawers = Math.max(0, num('drawers', 0)), doors = Math.max(0, num('doors', 0)), open = Math.max(0, num('open', 0));
     rect(x, y, b.w, b.h, thick);
     const openH = open ? Math.min(b.h * 0.45, b.h * 0.22 * open) : 0;
@@ -514,7 +522,7 @@ function drawSketch(item) {
     if (open) txt(x + b.w / 2, y + b.h - openH / 2 + 4, 'открыто', 'opacity=".6"');
     dimH(x, x + b.w, y + b.h + 14, `${W}`);
     dimV(y, y + b.h, x - 14, `${H}`);
-    cap = `${item === 'pen' ? 'Пенал' : 'Тумба'} ${W}×${num('fdepth', 470)}×${H} мм (Ш×Г×В), вид спереди`;
+    cap = `${item === 'pen' ? 'Пенал' : 'Тумба'} ${W}×${num('fdepth', 470)}×${H} мм (Ш×Г×В): вид спереди и сбоку`;
   } else if (item === 'mirror') {
     const shape = document.querySelector('input[name=mshape]:checked').value;
     const hh = shape === 'circle' ? W : H;
