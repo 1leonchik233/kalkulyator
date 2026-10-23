@@ -214,7 +214,7 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
 <script>
 // Ставки откалиброваны по просчётам производства (КЛОД/Калькулятор, 23.10.2026). Только розничные цены.
 const BW = [400, 600, 800, 1000, 1200, 1500, 1800];
-const BP = [33000, 38000, 43000, 49000, 55000, 62000, 70000];
+const BP = [36000, 42000, 47000, 54000, 60000, 68000, 77000];
 const MAT = { ldsp: 0.9, plenka: 1.0, agt: 1.0, emal: 1.35, shpon: 3.0 };
 const MAT_NAME = { ldsp: 'ЛДСП PUR', plenka: 'МДФ плёнка ПВХ', agt: 'АГТ', emal: 'МДФ эмаль', shpon: 'шпон' };
 const TOP_NAME = {
@@ -289,7 +289,7 @@ function calc() {
   const fronts = item === 'pen' ? 2 : Math.max(1, drawers + doors);
 
   if (item === 'pen') {
-    add(`Пенал ${w}×${h} мм, ${MAT_NAME[mat]}`, 30000 * h / 1000 * Math.max(1, w / 600) * k);
+    add(`Пенал ${w}×${h} мм, ${MAT_NAME[mat]}`, 33000 * h / 1000 * Math.max(1, w / 600) * k);
   } else {
     add(`Тумба ${w} мм, ${MAT_NAME[mat]}, ящиков: ${drawers}`, interp(w) * k);
     if (drawers > 2) add(`Дополнительные ящики: ${drawers - 2}`, 7000 * (drawers - 2) * k);
@@ -316,10 +316,12 @@ function calc() {
   const cash = lines.reduce((s, l) => s + l[1], 0);
   const beznal = $('beznal').checked;
   const disc = beznal ? 0 : r100(cash * 0.05);
+  const extra = beznal ? r100(cash * 0.1) : 0;
   if (disc) lines.push(['Скидка за оплату наличными / переводом (5%)', -disc]);
+  if (extra) lines.push(['Надбавка за безналичную оплату (10%)', extra]);
   const svc = services(false, cash, 0);
   lines.push(...svc);
-  const pay = (beznal ? Math.round(cash * 1.1 / 1000) * 1000 : cash - disc) + svc.reduce((s, l) => s + l[1], 0);
+  const pay = (cash - disc + extra) + svc.reduce((s, l) => s + l[1], 0);
   let days = (mat === 'emal' || mat === 'shpon') ? 45 : 30;
   if ($('freza').checked) days += 14;
   if ($('ral').checked) days = Math.max(days, 45);
