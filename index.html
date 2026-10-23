@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Калькулятор ПРОГРЕСС</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: форма слева, «чек» с расчётом справа (на телефоне — под формой). Палитра: камень + глубокий сине-зелёный, как акрил и керамика шоурума. */
+:root {
+  --bg: #f3f4f3;
+  --panel: #ffffff;
+  --ink: #1b2422;
+  --muted: #5f6b68;
+  --line: #d8dddb;
+  --accent: #1f5c57;
+  --accent-soft: #e2eeec;
+  --receipt: #fbfcfb;
+  --display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121716; --panel: #1a2120; --ink: #e6ecea; --muted: #9aa8a4; --line: #2c3634;
+    --accent: #6fbdb4; --accent-soft: #1f3330; --receipt: #161c1b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121716; --panel: #1a2120; --ink: #e6ecea; --muted: #9aa8a4; --line: #2c3634;
+  --accent: #6fbdb4; --accent-soft: #1f3330; --receipt: #161c1b; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 24px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(22px, 4vw, 30px); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); margin: 0; }
+.grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+form { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; gap: 22px; min-width: 0; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; min-width: 0; }
+legend { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; margin-bottom: 10px; padding: 0; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+label.f { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+input[type=number], select {
+  font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 10px; width: 100%; font-variant-numeric: tabular-nums;
+}
+input:focus-visible, select:focus-visible, button:focus-visible, .seg label:focus-within, .chk:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { cursor: pointer; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px; background: var(--bg); transition: background .15s, border-color .15s; }
+.seg input:checked + span { color: var(--accent); font-weight: 600; }
+.seg label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
+.chks { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 16px; }
+.chk { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.chk input { accent-color: var(--accent); width: 17px; height: 17px; margin-top: 2px; flex: none; }
+.chk small { color: var(--muted); display: block; }
+.receipt { background: var(--receipt); border: 1px solid var(--line); border-radius: 14px; padding: 22px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 16px; min-width: 0; }
+@media (max-width: 820px) { .receipt { position: static; } }
+.receipt h2 { font-family: var(--display); font-weight: 500; font-size: 15px; margin: 0; letter-spacing: .02em; }
+.lines { display: grid; gap: 8px; border-bottom: 1px dashed var(--line); padding-bottom: 14px; }
+.line { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.line span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.total { display: grid; gap: 4px; }
+.total .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.total .big { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 6vw, 40px); color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fact { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.fact b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+.fact span { font-size: 12px; color: var(--muted); }
+button { font: inherit; font-weight: 600; cursor: pointer; border: 0; border-radius: 10px; padding: 12px 14px; background: var(--accent); color: var(--panel); }
+.note { font-size: 12px; color: var(--muted); margin: 0; }
+.copied { font-size: 13px; color: var(--accent); min-height: 1.2em; margin: 0; }
+textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Калькулятор <span>ПРОГРЕСС</span></h1>
+    <p class="sub">Тумбы под раковину, пеналы и столешницы из акрила. Цены для клиента, 2026.</p>
+  </header>
+
+  <div class="grid">
+    <form id="f" autocomplete="off">
+      <fieldset>
+        <legend>Изделие</legend>
+        <div class="seg" role="radiogroup" aria-label="Изделие">
+          <label><input type="radio" name="item" id="item-tumba" value="tumba" checked><span>Тумба</span></label>
+          <label><input type="radio" name="item" id="item-pen" value="pen"><span>Пенал</span></label>
+        </div>
+        <div class="row">
+          <label class="f" for="width">Ширина, мм<input type="number" id="width" min="300" max="3000" step="10" value="800"></label>
+          <label class="f" for="height" id="height-wrap" hidden>Высота, мм<input type="number" id="height" min="600" max="3000" step="10" value="1900"></label>
+          <label class="f tumba-only" for="drawers">Ящиков<input type="number" id="drawers" min="0" max="8" value="2"></label>
+          <label class="f tumba-only" for="doors">Дверей<input type="number" id="doors" min="0" max="6" value="0"></label>
+          <label class="f tumba-only" for="open">Открытых секций<input type="number" id="open" min="0" max="4" value="0"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Материал корпуса и фасадов</legend>
+        <div class="seg" role="radiogroup" aria-label="Материал">
+          <label><input type="radio" name="mat" id="mat-ldsp" value="ldsp"><span>ЛДСП PUR</span></label>
+          <label><input type="radio" name="mat" id="mat-plenka" value="plenka" checked><span>МДФ плёнка</span></label>
+          <label><input type="radio" name="mat" id="mat-agt" value="agt"><span>АГТ</span></label>
+          <label><input type="radio" name="mat" id="mat-emal" value="emal"><span>МДФ эмаль</span></label>
+          <label><input type="radio" name="mat" id="mat-shpon" value="shpon"><span>Шпон</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="tumba-only">
+        <legend>Столешница</legend>
+        <label class="f" for="top">Вариант
+          <select id="top">
+            <option value="none" selected>Без столешницы</option>
+            <option value="white-int">Акрил белый, интегрированная раковина</option>
+            <option value="m-int">Акрил серия М, интегрированная раковина</option>
+          </select>
+        </label>
+        <p class="note">Другие цвета, столешница без раковины, подклейка раковины клиента, две раковины, ЛДСП — цену уточняйте у производства.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Опции</legend>
+        <div class="chks">
+          <label class="chk" for="freza"><input type="checkbox" id="freza"><span>Фрезеровка фасадов<small>+2 500 ₽ за фасад, +14 дней</small></span></label>
+          <label class="chk" for="ral"><input type="checkbox" id="ral"><span>Цвет по RAL не из наличия<small>+25 000 ₽</small></span></label>
+          <label class="chk tumba-only" for="push"><input type="checkbox" id="push"><span>Push Blum<small>+18 000 ₽</small></span></label>
+          <label class="chk tumba-only" for="hettich"><input type="checkbox" id="hettich"><span>Ящики Hettich / Blum<small>+5 000 ₽ за ящик</small></span></label>
+          <label class="chk" for="back"><input type="checkbox" id="back"><span>Задняя стенка<small>тумба +2 000 ₽, пенал +8 000 ₽</small></span></label>
+          <label class="chk tumba-only" for="hidden"><input type="checkbox" id="hidden"><span>Скрытый ящик<small>+5 000 ₽</small></span></label>
+          <label class="chk" for="light"><input type="checkbox" id="light"><span>Подсветка врезная<small>+4 000 ₽ за секцию</small></span></label>
+          <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small>+10%</small></span></label>
+        </div>
+      </fieldset>
+    </form>
+
+    <aside class="receipt" aria-live="polite">
+      <h2>Расчёт для клиента</h2>
+      <div class="lines" id="lines"></div>
+      <div class="total">
+        <span class="lbl" id="total-lbl">Итого, наличные</span>
+        <span class="big" id="total">0 ₽</span>
+      </div>
+      <div class="facts">
+        <div class="fact"><b id="prepay">0 ₽</b><span>предоплата 70%</span></div>
+        <div class="fact"><b id="days">30 дней</b><span>срок изготовления</span></div>
+      </div>
+      <button type="button" id="copy">Скопировать для клиента</button>
+      <p class="copied" id="copied"></p>
+      <textarea class="fallback" id="fallback" hidden aria-label="Текст для клиента"></textarea>
+      <p class="note">Ориентир ±10–15%. Сложные заказы (радиусы, нестандартные размеры, кухни, шкафы) — уточняйте цену у производства перед договором.</p>
+    </aside>
+  </div>
+</div>
+
+<script>
+// Ставки откалиброваны по просчётам производства (КЛОД/Калькулятор, 23.10.2026). Только розничные цены.
+const BW = [400, 600, 800, 1000, 1200, 1500, 1800];
+const BP = [33000, 38000, 43000, 49000, 55000, 62000, 70000];
+const MAT = { ldsp: 0.9, plenka: 1.0, agt: 1.0, emal: 1.35, shpon: 3.0 };
+const MAT_NAME = { ldsp: 'ЛДСП PUR', plenka: 'МДФ плёнка ПВХ', agt: 'АГТ', emal: 'МДФ эмаль', shpon: 'шпон' };
+const TOP_NAME = {
+  'white-int': 'Столешница акрил белая с интегрированной раковиной',
+  'milky-int': 'Столешница акрил Milky Way D-313 с интегрированной раковиной',
+  'm-int': 'Столешница акрил серия М с интегрированной раковиной',
+  'white-rect': 'Столешница акрил белая без раковины',
+  'podkleyka': 'Столешница акрил + подклейка раковины клиента',
+  'two-sinks': 'Столешница акрил белая, две раковины',
+  'ldsp': 'Столешница ЛДСП PUR'
+};
+const $ = id => document.getElementById(id);
+const num = (id, d) => { const v = parseInt($(id).value, 10); return Number.isFinite(v) ? v : d; };
+const rub = n => Math.round(n).toLocaleString('ru-RU') + ' ₽';
+const r100 = n => Math.round(n / 100) * 100;
+
+function interp(w) {
+  if (w <= BW[0]) return BP[0];
+  for (let i = 1; i < BW.length; i++) if (w <= BW[i]) return BP[i - 1] + (BP[i] - BP[i - 1]) * (w - BW[i - 1]) / (BW[i] - BW[i - 1]);
+  const n = BW.length - 1;
+  return BP[n] + (BP[n] - BP[n - 1]) * (w - BW[n]) / (BW[n] - BW[n - 1]);
+}
+function step(w, a, b, c) { return w <= 800 ? a : w <= 1000 ? b : c + 6000 * Math.ceil(Math.max(0, w - 1200) / 200); }
+
+function calc() {
+  const item = document.querySelector('input[name=item]:checked').value;
+  const mat = document.querySelector('input[name=mat]:checked').value;
+  const w = Math.max(300, num('width', 800));
+  const h = Math.max(600, num('height', 1900));
+  const drawers = Math.max(0, num('drawers', 2));
+  const doors = Math.max(0, num('doors', 0));
+  const open = Math.max(0, num('open', 0));
+  const k = MAT[mat];
+  const lines = [];
+  const add = (n, s) => lines.push([n, r100(s)]);
+  const fronts = item === 'pen' ? 2 : Math.max(1, drawers + doors);
+
+  if (item === 'pen') {
+    add(`Пенал ${w}×${h} мм, ${MAT_NAME[mat]}`, 30000 * h / 1000 * Math.max(1, w / 600) * k);
+  } else {
+    add(`Тумба ${w} мм, ${MAT_NAME[mat]}, ящиков: ${drawers}`, interp(w) * k);
+    if (drawers > 2) add(`Дополнительные ящики: ${drawers - 2}`, 7000 * (drawers - 2) * k);
+    if (doors > 0) add(`Распашные двери: ${doors}`, 1500 * doors);
+    if (open > 0) add(`Открытые секции: ${open}`, 3000 * open);
+  }
+  if ($('freza').checked) add(`Фрезеровка фасадов: ${fronts}`, 2500 * fronts);
+  if ($('ral').checked) add('Цвет по RAL', 25000);
+  if (item === 'tumba' && $('push').checked) add('Push Blum', 18000);
+  if (item === 'tumba' && $('hettich').checked) add(`Ящики Hettich / Blum: ${drawers}`, 5000 * drawers);
+  if ($('back').checked) add('Задняя стенка', item === 'pen' ? 8000 : 2000);
+  if (item === 'tumba' && $('hidden').checked) add('Скрытый ящик', 5000);
+  if ($('light').checked) add('Подсветка врезная', 4000 * (item === 'pen' ? 1 : Math.max(1, open)));
+
+  if (item === 'tumba') {
+    const t = $('top').value;
+    const base = step(w, 59000, 65000, 69000);
+    const top = { 'white-int': base, 'milky-int': base * 1.1, 'm-int': base * 1.55,
+      'white-rect': step(w, 35000, 42000, 51000), 'podkleyka': 47000, 'ldsp': 18000,
+      'two-sinks': Math.max(86000, base * 1.4) }[t];
+    if (top) add(`${TOP_NAME[t]}, ${w} мм`, top);
+  }
+
+  const cash = lines.reduce((s, l) => s + l[1], 0);
+  const beznal = $('beznal').checked;
+  const pay = beznal ? Math.round(cash * 1.1 / 1000) * 1000 : cash;
+  let days = (mat === 'emal' || mat === 'shpon') ? 45 : 30;
+  if ($('freza').checked) days += 14;
+  if ($('ral').checked) days = Math.max(days, 45);
+  const prepay = Math.ceil(pay * 0.7 / 5000) * 5000;
+
+  $('lines').replaceChildren(...lines.map(([n, s]) => {
+    const d = document.createElement('div'); d.className = 'line';
+    const a = document.createElement('span'); a.textContent = n;
+    const b = document.createElement('span'); b.textContent = rub(s);
+    d.append(a, b); return d;
+  }));
+  $('total-lbl').textContent = beznal ? 'Итого, безнал' : 'Итого, наличные';
+  $('total').textContent = rub(pay);
+  $('prepay').textContent = rub(prepay);
+  $('days').textContent = `~${days} дней`;
+
+  return [...lines.map(([n, s]) => `${n} — ${rub(s)}`), '',
+    `Итого${beznal ? ' (безнал)' : ''}: ${rub(pay)}`,
+    `Предоплата 70%: ${rub(prepay)}`, `Срок изготовления: ~${days} дней`].join('\n');
+}
+
+let text = '';
+function update() {
+  const pen = document.querySelector('input[name=item]:checked').value === 'pen';
+  $('height-wrap').hidden = !pen;
+  document.querySelectorAll('.tumba-only').forEach(el => { el.hidden = pen; });
+  text = calc();
+  $('copied').textContent = '';
+}
+$('f').addEventListener('input', update);
+$('f').addEventListener('change', update);
+$('f').addEventListener('submit', e => e.preventDefault());
+$('copy').addEventListener('click', () => {
+  const done = () => { $('copied').textContent = 'Скопировано — вставьте в чат с клиентом'; };
+  const fallback = () => {
+    const t = $('fallback'); t.hidden = false; t.value = text; t.focus(); t.select();
+    $('copied').textContent = 'Выделено — скопируйте вручную (Ctrl+C)';
+  };
+  try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+});
+update();
+</script>
+</body>
+</html>
