@@ -214,7 +214,7 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
           <label class="chk furn-only" for="back"><input type="checkbox" id="back"><span>Задняя стенка<small>тумба +2 000 ₽, пенал +8 000 ₽</small></span></label>
           <label class="chk furn-only" for="hidden"><input type="checkbox" id="hidden"><span>Скрытый ящик<small>+5 000 ₽</small></span></label>
           <label class="chk furn-only" for="light"><input type="checkbox" id="light"><span>Подсветка врезная<small>+4 000 ₽ за секцию</small></span></label>
-          <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small>мебель +10%, душевые +20%, зеркала по безналичной цене</small></span></label>
+          <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small>тумба +10%, пенал +10%, зеркало +10%, душевые +20%</small></span></label>
         </div>
       </fieldset>
       <fieldset>
@@ -421,12 +421,13 @@ function calcMirrorTotal() {
   const w = Math.max(200, num('width', 800));
   const h = Math.max(200, num('height', 1000));
   const beznal = $('beznal').checked;
-  const f = beznal ? MB : 1 / 0.95;  // нал: строка скидки 5% возвращает цену к базовой
+  const f = 1 / 0.95;  // базовая цена; нал −5%, безнал +10%
   const goods = calcMirror(w, h).map(([n, s]) => [n, r100(s * f)]);
   const shape = document.querySelector('input[name=mshape]:checked').value;
   const area = w * (shape === 'circle' ? w : h) / 1e6;
   const gsum = goods.reduce((s, l) => s + l[1], 0);
   if (!beznal) goods.push(['Скидка за оплату наличными / переводом (5%)', -r100(gsum * 0.05)]);
+  else goods.push(['Надбавка за безналичную оплату (10%)', r100(gsum * 0.1)]);
   const lines = goods.concat(services(true, 0, area));
   const pay = lines.reduce((s, l) => s + l[1], 0);
   const prepay = Math.ceil(pay * 0.7 / 1000) * 1000;
