@@ -32,6 +32,7 @@
   --accent: #6fbdb4; --accent-soft: #1f3330; --receipt: #161c1b; color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45;
   padding-block: 28px 48px;
@@ -80,6 +81,9 @@ input:focus-visible, select:focus-visible, button:focus-visible, .seg label:focu
 button { font: inherit; font-weight: 600; cursor: pointer; border: 0; border-radius: 10px; padding: 12px 14px; background: var(--accent); color: var(--panel); }
 .note { font-size: 12px; color: var(--muted); margin: 0; }
 .copied { font-size: 13px; color: var(--accent); min-height: 1.2em; margin: 0; }
+.sketch { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 10px; display: grid; gap: 6px; }
+.sketch svg { width: 100%; height: auto; display: block; max-height: 340px; }
+.sketch .cap { font-size: 12px; color: var(--muted); }
 textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -240,6 +244,7 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
       </div>
       <button type="button" id="copy">Скопировать для клиента</button>
       <p class="copied" id="copied"></p>
+      <figure class="sketch" id="sketch" aria-label="Схема изделия" style="margin:0"></figure>
       <textarea class="fallback" id="fallback" hidden aria-label="Текст для клиента"></textarea>
       <p class="note">Ориентир ±10–15%. Сложные заказы (радиусы, нестандартные размеры, кухни, шкафы) — уточняйте цену у производства перед договором.</p>
     </aside>
@@ -441,7 +446,7 @@ function calcShowerTotal() {
   const t = $('stype').value;
   const w = Math.max(200, num('width', 800));
   const h = Math.max(300, num('height', 2000));
-  const d = Math.max(0, num('sdepth', 800));
+  const d = Math.max(200, num('sdepth', 800));
   const corner = t === 'corner' || t === 'slide';
   const area = (corner ? w + d : w) * h / 1e6;
   const g = $('sglass').value, c = S_COLOR[$('scolor').value];
@@ -469,6 +474,106 @@ function calcShowerTotal() {
     `Предоплата 70%: ${rub(prepay)}`, `Срок изготовления: ${days}`].join('\n');
 }
 
+// ===== Схема изделия (SVG, в масштабе) =====
+function drawSketch(item) {
+  const W = Math.max(200, num('width', 800));
+  const H = Math.max(200, num('height', item === 'pen' ? 1900 : 1000));
+  const P = 'stroke="currentColor"', thin = 'stroke-width="1.2"', thick = 'stroke-width="2.2"';
+  const out = [];
+  let cap = '';
+  // область рисования 320×220 + поля под размеры
+  const box = (w, h) => { const s = Math.min(300 / w, 210 / h); return { s, w: w * s, h: h * s }; };
+  const X0 = 46, Y0 = 16;
+  const rect = (x, y, w, h, extra = '') => out.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" ${P} ${extra}/>`);
+  const line = (x1, y1, x2, y2, extra = '') => out.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${P} ${extra}/>`);
+  const txt = (x, y, s, extra = '') => out.push(`<text x="${x}" y="${y}" font-size="11" fill="currentColor" text-anchor="middle" ${extra}>${s}</text>`);
+  const dimH = (x1, x2, y, label) => { line(x1, y, x2, y, thin); line(x1, y - 4, x1, y + 4, thin); line(x2, y - 4, x2, y + 4, thin); txt((x1 + x2) / 2, y + 14, label); };
+  const dimV = (y1, y2, x, label) => { line(x, y1, x, y2, thin); line(x - 4, y1, x + 4, y1, thin); line(x - 4, y2, x + 4, y2, thin);
+    out.push(`<text x="${x - 8}" y="${(y1 + y2) / 2}" font-size="11" fill="currentColor" text-anchor="middle" transform="rotate(-90 ${x - 8} ${(y1 + y2) / 2})">${label}</text>`); };
+  const handle = (x, y, w) => line(x + w * 0.35, y + 6, x + w * 0.65, y + 6, 'stroke-width="3" stroke-linecap="round" opacity=".55"');
+
+  if (item === 'tumba' || item === 'pen') {
+    const realH = item === 'pen' ? H : 560;
+    const b = box(W, realH), x = X0, y = Y0;
+    const drawers = Math.max(0, num('drawers', 0)), doors = Math.max(0, num('doors', 0)), open = Math.max(0, num('open', 0));
+    rect(x, y, b.w, b.h, thick);
+    const openH = open ? Math.min(b.h * 0.45, b.h * 0.22 * open) : 0;
+    for (let i = 0; i < open; i++) { const yy = y + b.h - openH + (openH / open) * i; line(x, yy, x + b.w, yy, thin); }
+    const zoneH = b.h - openH;
+    const cols = (doors > 0 ? doors : 0) + (drawers > 0 ? 1 : 0) || 1;
+    const cw = b.w / cols;
+    for (let c = 1; c < cols; c++) line(x + cw * c, y, x + cw * c, y + zoneH, thin);
+    for (let dI = 0; dI < doors; dI++) { const xx = x + cw * dI; out.push(`<circle cx="${xx + cw - 8}" cy="${y + zoneH / 2}" r="2.5" fill="currentColor" opacity=".6"/>`); }
+    if (drawers > 0) {
+      const xx = x + cw * (cols - 1), dh = zoneH / drawers;
+      for (let i = 0; i < drawers; i++) { if (i) line(xx, y + dh * i, xx + cw, y + dh * i, thin); handle(xx, y + dh * i, cw); }
+    }
+    if (open) txt(x + b.w / 2, y + b.h - openH / 2 + 4, 'открыто', 'opacity=".6"');
+    dimH(x, x + b.w, y + b.h + 14, `${W}`);
+    dimV(y, y + b.h, x - 14, item === 'pen' ? `${H}` : 'H');
+    cap = item === 'pen' ? `Пенал ${W}×${H} мм, вид спереди` : `Тумба ${W} мм, вид спереди (высота по проекту)`;
+  } else if (item === 'mirror') {
+    const shape = document.querySelector('input[name=mshape]:checked').value;
+    const hh = shape === 'circle' ? W : H;
+    const b = box(W, hh), x = X0, y = Y0, t = $('mtype').value;
+    const glow = t === 'float' || t === 'both';
+    const front = t === 'front' || t === 'both';
+    if (shape === 'circle') {
+      const r = b.w / 2, cx = x + r, cy = y + r;
+      if (glow) out.push(`<circle cx="${cx}" cy="${cy}" r="${r + 5}" fill="none" stroke="var(--accent)" stroke-width="5" opacity=".35"/>`);
+      out.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" ${P} ${thick}/>`);
+      if (front) out.push(`<circle cx="${cx}" cy="${cy}" r="${r - 10}" fill="none" stroke="var(--accent)" stroke-width="3" opacity=".7"/>`);
+      dimH(x, x + b.w, y + b.h + 14, `Ø${W}`);
+    } else {
+      const rx = shape === 'round' ? 14 : 0;
+      if (glow) out.push(`<rect x="${x - 5}" y="${y - 5}" width="${b.w + 10}" height="${b.h + 10}" rx="${rx + 5}" fill="none" stroke="var(--accent)" stroke-width="5" opacity=".35"/>`);
+      out.push(`<rect x="${x}" y="${y}" width="${b.w}" height="${b.h}" rx="${rx}" fill="none" ${P} ${thick}/>`);
+      if (front) out.push(`<rect x="${x + 10}" y="${y + 10}" width="${b.w - 20}" height="${b.h - 20}" rx="${Math.max(0, rx - 6)}" fill="none" stroke="var(--accent)" stroke-width="3" opacity=".7"/>`);
+      dimH(x, x + b.w, y + b.h + 14, `${W}`);
+      dimV(y, y + b.h, x - 14, `${H}`);
+    }
+    if ($('msensor').checked && (glow || front)) out.push(`<circle cx="${x + b.w / 2}" cy="${y + b.h - 18}" r="4" fill="none" ${P} ${thin}/>`);
+    cap = `Зеркало ${shape === 'circle' ? 'Ø' + W : W + '×' + H} мм` + (glow ? ', парящая подсветка' : '') + (front ? ', фронтальная подсветка' : '');
+  } else if (item === 'shower') {
+    const t = $('stype').value, D = Math.max(200, num('sdepth', 800));
+    if (t === 'corner' || t === 'slide') {
+      // вид сверху: стены — серые, стекло — акцент
+      const b = box(W + 60, D + 60), s = b.s, x = X0 + 10, y = Y0 + 4;
+      const wall = 'stroke="var(--muted)" stroke-width="6"';
+      out.push(`<line x1="${x}" y1="${y}" x2="${x + W * s}" y2="${y}" ${wall}/>`, `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + D * s}" ${wall}/>`);
+      const gx = x + W * s, gy = y + D * s, G = 'stroke="var(--accent)" stroke-width="3"';
+      out.push(`<line x1="${gx}" y1="${y}" x2="${gx}" y2="${gy}" ${G}/>`, `<line x1="${x}" y1="${gy}" x2="${gx}" y2="${gy}" ${G}/>`);
+      if (t === 'corner') {
+        const dw = Math.min(W * 0.6, 650) * s, dx = gx - dw;
+        out.push(`<path d="M ${dx} ${gy} A ${dw} ${dw} 0 0 1 ${gx} ${gy + dw}" fill="none" stroke="currentColor" stroke-dasharray="4 4" opacity=".6"/>`);
+        txt(dx + dw / 2, gy - 6, 'дверь', 'opacity=".7"');
+      } else {
+        txt(x + W * s / 2, gy - 8, '⇄ раздвижная', 'opacity=".7"');
+        txt(gx - 26, y + D * s / 2, '⇅', 'opacity=".7"');
+      }
+      dimH(x, gx, gy + 20, `${W}`);
+      dimV(y, gy, gx + 28, `${D}`);
+      cap = `${S_NAME[t]}: вид сверху, высота ${H} мм. Серым — стены, цветом — стекло`;
+    } else {
+      const b = box(W, H), x = X0, y = Y0, Gf = 'fill="var(--accent)" fill-opacity=".12"';
+      out.push(`<rect x="${x}" y="${y}" width="${b.w}" height="${b.h}" ${Gf} stroke="var(--accent)" stroke-width="2.2"/>`);
+      const hinge = (hx, hy) => out.push(`<rect x="${hx - 3}" y="${hy}" width="6" height="12" fill="currentColor" opacity=".7"/>`);
+      const knob = (kx) => line(kx, y + b.h * 0.45, kx, y + b.h * 0.6, 'stroke-width="3" stroke-linecap="round"');
+      if (t === 'niche') { hinge(x + 4, y + 18); hinge(x + 4, y + b.h - 30); knob(x + b.w - 12); txt(x + b.w / 2, y + b.h / 2, 'дверь', 'opacity=".6"'); }
+      if (t === 'double') { line(x + b.w / 2, y, x + b.w / 2, y + b.h, thin); hinge(x + 4, y + 18); hinge(x + 4, y + b.h - 30); hinge(x + b.w - 4, y + 18); hinge(x + b.w - 4, y + b.h - 30);
+        knob(x + b.w / 2 - 8); knob(x + b.w / 2 + 8); }
+      if (t === 'doorfix') { const fx = x + b.w * 0.45; line(fx, y, fx, y + b.h, thin); hinge(fx + 4, y + 18); hinge(fx + 4, y + b.h - 30); knob(x + b.w - 12);
+        txt(x + b.w * 0.22, y + b.h / 2, 'глухое', 'opacity=".6"'); txt(x + b.w * 0.72, y + b.h / 2, 'дверь', 'opacity=".6"'); }
+      if (t === 'bath') { line(x, y + 12, x + b.w, y + 12, 'stroke-width="2" opacity=".5"'); txt(x + b.w / 2, y + b.h / 2, 'глухое', 'opacity=".6"'); }
+      dimH(x, x + b.w, y + b.h + 14, `${W}`);
+      dimV(y, y + b.h, x - 14, `${H}`);
+      cap = `${S_NAME[t]} ${W}×${H} мм, вид спереди`;
+    }
+  }
+  const vbW = 400, vbH = 270;
+  $('sketch').innerHTML = `<svg viewBox="0 0 ${vbW} ${vbH}" role="img" aria-label="${cap}" style="color:var(--ink)">${out.join('')}</svg><span class="cap">${cap}. Схема ориентировочная, не чертёж для производства.</span>`;
+}
+
 let text = '';
 let lastItem = 'tumba';
 function update() {
@@ -491,6 +596,7 @@ function update() {
   $('sdeliv-note').textContent = mirror ? '5 500 ₽, за МКАД +100 ₽/км' : shower ? 'до подъезда 4 000 ₽ (без монтажа), за МКАД +100 ₽/км' : '2 500 ₽, за МКАД +40 ₽/км';
   $('smount-note').textContent = mirror ? '5 000 ₽, большие зеркала (от 1,5 м²) — уточнять' : shower ? 'доставка + подъём + монтаж 12 000 ₽ за изделие' : '5 000 ₽, заказ дороже 50 000 ₽ — 10%';
   text = calc();
+  drawSketch(item);
   $('copied').textContent = '';
 }
 $('f').addEventListener('input', update);
