@@ -183,7 +183,7 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
           <label class="chk" for="sdeliv"><input type="checkbox" id="sdeliv"><span>Доставка по Москве<small id="sdeliv-note">2 500 ₽</small></span></label>
           <label class="chk" for="smount"><input type="checkbox" id="smount"><span>Монтаж<small id="smount-note">5 000 ₽, заказ дороже 50 000 ₽ — 10%</small></span></label>
           <label class="chk mirror-only" for="sdemount" hidden><input type="checkbox" id="sdemount"><span>Демонтаж старого зеркала<small>6 500 ₽</small></span></label>
-          <label class="chk" for="smeasure"><input type="checkbox" id="smeasure"><span>Замер<small>4 000 ₽ в пределах МКАД</small></span></label>
+          <label class="chk" for="smeasure"><input type="checkbox" id="smeasure"><span>Замер<small>2 500 ₽ в пределах МКАД</small></span></label>
         </div>
         <div class="row">
           <label class="f" for="skm">Км за МКАД<input type="number" id="skm" min="0" max="300" value="0"></label>
@@ -351,7 +351,7 @@ function services(mirror, goods, area) {
     mirror ? 5500 + 100 * km : 2500 + 40 * km]);
   if ($('smount').checked) out.push([mirror && area > 1.5 ? 'Монтаж от (большое зеркало — цену уточнить)' : 'Монтаж', mirror ? 5000 : (goods > 50000 ? r100(goods * 0.1) : 5000)]);
   if (mirror && $('sdemount').checked) out.push(['Демонтаж старого зеркала', 6500]);
-  if ($('smeasure').checked) out.push(['Замер (в пределах МКАД)', 4000]);
+  if ($('smeasure').checked) out.push(['Замер (в пределах МКАД)', 2500]);
   if (floors > 0) out.push([`Подъём по лестнице: ${floors} эт.`, (mirror ? 1000 : 500) * floors]);
   return out;
 }
