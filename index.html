@@ -345,7 +345,7 @@ function services(mirror, goods, area) {
   const km = Math.max(0, num('skm', 0)), floors = Math.max(0, num('sfloors', 0));
   if ($('sdeliv').checked) out.push(['Доставка по Москве' + (km ? ` + ${km} км за МКАД` : ''),
     mirror ? 5500 + 100 * km : 2500 + 40 * km]);
-  if ($('smount').checked) out.push(['Монтаж', mirror ? (area > 1.5 ? 12000 : 8500) : (goods > 50000 ? r100(goods * 0.1) : 5000)]);
+  if ($('smount').checked) out.push([mirror && area > 1.5 ? 'Монтаж от (большое зеркало — цену уточнить)' : 'Монтаж', mirror ? 5000 : (goods > 50000 ? r100(goods * 0.1) : 5000)]);
   if (mirror && $('sdemount').checked) out.push(['Демонтаж старого зеркала', 6500]);
   if ($('smeasure').checked) out.push(['Замер (в пределах МКАД)', 4000]);
   if (floors > 0) out.push([`Подъём по лестнице: ${floors} эт.`, (mirror ? 1000 : 500) * floors]);
@@ -399,7 +399,7 @@ function update() {
   document.querySelectorAll('.furn-only').forEach(el => { el.hidden = mirror; });
   document.querySelectorAll('.mirror-only').forEach(el => { el.hidden = !mirror; });
   $('sdeliv-note').textContent = mirror ? '5 500 ₽, за МКАД +100 ₽/км' : '2 500 ₽, за МКАД +40 ₽/км';
-  $('smount-note').textContent = mirror ? '8 500 ₽, большое (от 1,5 м²) 12 000 ₽' : '5 000 ₽, заказ дороже 50 000 ₽ — 10%';
+  $('smount-note').textContent = mirror ? '5 000 ₽, большие зеркала (от 1,5 м²) — уточнять' : '5 000 ₽, заказ дороже 50 000 ₽ — 10%';
   text = calc();
   $('copied').textContent = '';
 }
