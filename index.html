@@ -214,7 +214,7 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
           <label class="chk furn-only" for="back"><input type="checkbox" id="back"><span>Задняя стенка<small>тумба +2 000 ₽, пенал +8 000 ₽</small></span></label>
           <label class="chk furn-only" for="hidden"><input type="checkbox" id="hidden"><span>Скрытый ящик<small>+5 000 ₽</small></span></label>
           <label class="chk furn-only" for="light"><input type="checkbox" id="light"><span>Подсветка врезная<small>+4 000 ₽ за секцию</small></span></label>
-          <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small>мебель +10%, зеркала по безналичной цене</small></span></label>
+          <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small>мебель +10%, душевые +20%, зеркала по безналичной цене</small></span></label>
         </div>
       </fieldset>
       <fieldset>
@@ -454,7 +454,7 @@ function calcShowerTotal() {
   const area = (corner ? w + d : w) * h / 1e6;
   const g = $('sglass').value, c = S_COLOR[$('scolor').value];
   const beznal = $('beznal').checked;
-  const f = beznal ? MB : 1 / 0.95;
+  const f = 1 / 0.95;  // базовая цена; нал −5%, безнал +20%
   const shelves = Math.max(0, num('sshelves', 0));
   const size = corner ? `${w}×${d}, H${h}` : `${w}×${h}`;
   const goods = [
@@ -464,6 +464,7 @@ function calcShowerTotal() {
   if (shelves > 0) goods.push([`Полки из закалённого стекла: ${shelves} шт`, r100(4250 * shelves * f)]);
   const gsum = goods.reduce((s, l) => s + l[1], 0);
   if (!beznal) goods.push(['Скидка за оплату наличными / переводом (5%)', -r100(gsum * 0.05)]);
+  else goods.push(['Надбавка за безналичную оплату (20%)', r100(gsum * 0.2)]);
   const km = Math.max(0, num('skm', 0));
   if ($('smount').checked) goods.push(['Доставка, подъём и монтаж' + (km ? ` (+${km} км за МКАД)` : ''), 12000 + 100 * km]);
   else if ($('sdeliv').checked) goods.push(['Доставка до подъезда' + (km ? ` (+${km} км за МКАД)` : ''), 4000 + 100 * km]);
