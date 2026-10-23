@@ -214,7 +214,7 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
           <label class="chk furn-only" for="back"><input type="checkbox" id="back"><span>Задняя стенка<small>тумба +2 000 ₽, пенал +8 000 ₽</small></span></label>
           <label class="chk furn-only" for="hidden"><input type="checkbox" id="hidden"><span>Скрытый ящик<small>+5 000 ₽</small></span></label>
           <label class="chk furn-only" for="light"><input type="checkbox" id="light"><span>Подсветка врезная<small>+4 000 ₽ за секцию</small></span></label>
-          <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small>тумба +10%, пенал +10%, зеркало +10%, душевые +20%</small></span></label>
+          <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small id="beznal-note">+10%</small></span></label>
         </div>
       </fieldset>
       <fieldset>
@@ -606,6 +606,7 @@ function update() {
   document.querySelectorAll('.shower-only').forEach(el => { el.hidden = !shower; });
   const corner = ['corner', 'slide'].includes($('stype').value);
   $('sdepth-wrap').hidden = !(shower && corner);
+  $('beznal-note').textContent = shower ? '+20%' : '+10%';
   $('sdeliv-note').textContent = mirror ? '5 500 ₽, за МКАД +100 ₽/км' : shower ? 'до подъезда 4 000 ₽ (без монтажа), за МКАД +100 ₽/км' : '2 500 ₽, за МКАД +40 ₽/км';
   $('smount-note').textContent = mirror ? '5 000 ₽, большие зеркала (от 1,5 м²) — уточнять' : shower ? 'доставка + подъём + монтаж 12 000 ₽ за изделие' : '5 000 ₽, заказ дороже 50 000 ₽ — 10%';
   text = calc();
