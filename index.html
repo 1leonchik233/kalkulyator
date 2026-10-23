@@ -99,17 +99,47 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
         <div class="seg" role="radiogroup" aria-label="Изделие">
           <label><input type="radio" name="item" id="item-tumba" value="tumba" checked><span>Тумба</span></label>
           <label><input type="radio" name="item" id="item-pen" value="pen"><span>Пенал</span></label>
+          <label><input type="radio" name="item" id="item-mirror" value="mirror"><span>Зеркало</span></label>
         </div>
         <div class="row">
-          <label class="f" for="width">Ширина, мм<input type="number" id="width" min="300" max="3000" step="10" value="800"></label>
-          <label class="f" for="height" id="height-wrap" hidden>Высота, мм<input type="number" id="height" min="600" max="3000" step="10" value="1900"></label>
+          <label class="f" for="width">Ширина, мм<input type="number" id="width" min="200" max="3000" step="10" value="800"></label>
+          <label class="f" for="height" id="height-wrap" hidden>Высота, мм<input type="number" id="height" min="200" max="3000" step="10" value="1900"></label>
           <label class="f tumba-only" for="drawers">Ящиков<input type="number" id="drawers" min="0" max="8" value="2"></label>
           <label class="f tumba-only" for="doors">Дверей<input type="number" id="doors" min="0" max="6" value="0"></label>
           <label class="f tumba-only" for="open">Открытых секций<input type="number" id="open" min="0" max="4" value="0"></label>
         </div>
       </fieldset>
 
-      <fieldset>
+      <fieldset class="mirror-only" hidden>
+        <legend>Зеркало</legend>
+        <label class="f" for="mtype">Тип
+          <select id="mtype">
+            <option value="float" selected>С парящей подсветкой</option>
+            <option value="front">С фронтальной подсветкой</option>
+            <option value="both">Парящая + фронтальная подсветка</option>
+            <option value="plain">Без подсветки, на подложке</option>
+            <option value="d5">3D / 5D зеркало</option>
+            <option value="sheet4">Зеркальное полотно 4 мм</option>
+            <option value="sheet6">Зеркальное полотно 6 мм</option>
+          </select>
+        </label>
+        <div class="seg" role="radiogroup" aria-label="Форма">
+          <label><input type="radio" name="mshape" id="mshape-rect" value="rect" checked><span>Прямоугольник</span></label>
+          <label><input type="radio" name="mshape" id="mshape-round" value="round"><span>Скруглённые углы</span></label>
+          <label><input type="radio" name="mshape" id="mshape-circle" value="circle"><span>Круг</span></label>
+        </div>
+        <div class="chks">
+          <label class="chk" for="msensor"><input type="checkbox" id="msensor" checked><span>Сенсор (касание или взмах)<small>без него — механическая кнопка</small></span></label>
+          <label class="chk" for="mcct"><input type="checkbox" id="mcct"><span>Три режима света<small>тёплый / нейтральный / холодный</small></span></label>
+          <label class="chk" for="mheat"><input type="checkbox" id="mheat"><span>Подогрев (антизапотевание)</span></label>
+          <label class="chk" for="mclear"><input type="checkbox" id="mclear"><span>Осветлённое стекло</span></label>
+          <label class="chk" for="mlamp"><input type="checkbox" id="mlamp"><span>Сенсор под светильники клиента<small>для зеркала без подсветки</small></span></label>
+          <label class="chk" for="malice"><input type="checkbox" id="malice"><span>Колонка с Алисой<small>толщина зеркала 4 см</small></span></label>
+        </div>
+        <p class="note">Круг: ширина = диаметр. Монтаж, доставка, рамы, фацет и нестандартные формы — уточняйте у производства.</p>
+      </fieldset>
+
+      <fieldset class="furn-only">
         <legend>Материал корпуса и фасадов</legend>
         <div class="seg" role="radiogroup" aria-label="Материал">
           <label><input type="radio" name="mat" id="mat-ldsp" value="ldsp"><span>ЛДСП PUR</span></label>
@@ -135,14 +165,14 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
       <fieldset>
         <legend>Опции</legend>
         <div class="chks">
-          <label class="chk" for="freza"><input type="checkbox" id="freza"><span>Фрезеровка фасадов<small>+2 500 ₽ за фасад, +14 дней</small></span></label>
-          <label class="chk" for="ral"><input type="checkbox" id="ral"><span>Цвет по RAL не из наличия<small>+25 000 ₽</small></span></label>
+          <label class="chk furn-only" for="freza"><input type="checkbox" id="freza"><span>Фрезеровка фасадов<small>+2 500 ₽ за фасад, +14 дней</small></span></label>
+          <label class="chk furn-only" for="ral"><input type="checkbox" id="ral"><span>Цвет по RAL не из наличия<small>+25 000 ₽</small></span></label>
           <label class="chk tumba-only" for="push"><input type="checkbox" id="push"><span>Push Blum<small>+18 000 ₽</small></span></label>
           <label class="chk tumba-only" for="hettich"><input type="checkbox" id="hettich"><span>Ящики Hettich / Blum<small>+5 000 ₽ за ящик</small></span></label>
-          <label class="chk" for="back"><input type="checkbox" id="back"><span>Задняя стенка<small>тумба +2 000 ₽, пенал +8 000 ₽</small></span></label>
+          <label class="chk furn-only" for="back"><input type="checkbox" id="back"><span>Задняя стенка<small>тумба +2 000 ₽, пенал +8 000 ₽</small></span></label>
           <label class="chk tumba-only" for="hidden"><input type="checkbox" id="hidden"><span>Скрытый ящик<small>+5 000 ₽</small></span></label>
-          <label class="chk" for="light"><input type="checkbox" id="light"><span>Подсветка врезная<small>+4 000 ₽ за секцию</small></span></label>
-          <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small>+10%</small></span></label>
+          <label class="chk furn-only" for="light"><input type="checkbox" id="light"><span>Подсветка врезная<small>+4 000 ₽ за секцию</small></span></label>
+          <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small>мебель +10%, зеркала по безналичной цене</small></span></label>
         </div>
       </fieldset>
     </form>
@@ -194,8 +224,42 @@ function interp(w) {
 }
 function step(w, a, b, c) { return w <= 800 ? a : w <= 1000 ? b : c + 6000 * Math.ceil(Math.max(0, w - 1200) / 200); }
 
+// Зеркала: розничные ставки при оплате наличными / переводом. По безналу ×1,18.
+const MB = 1.1765;
+const M_NAME = { float: 'с парящей подсветкой', front: 'с фронтальной подсветкой', both: 'с парящей и фронтальной подсветкой',
+  plain: 'без подсветки, на подложке', d5: '3D / 5D', sheet4: 'полотно 4 мм', sheet6: 'полотно 6 мм' };
+function calcMirror(w, h) {
+  const t = $('mtype').value;
+  const shape = document.querySelector('input[name=mshape]:checked').value;
+  const hh = shape === 'circle' ? w : h;
+  const a = w * hh / 1e6;
+  const size = shape === 'circle' ? `круг Ø${w}` : `${w}×${h}`;
+  const lines = [];
+  const add = (n, s) => lines.push([n, s]);
+  const lit = t === 'float' || t === 'front' || t === 'both';
+  let base;
+  if (lit) base = 1700 + 17850 * a;
+  else if (t === 'plain') base = Math.max(5100, 9350 * a);
+  else if (t === 'd5') base = 18700 + 5100 * a;
+  else base = Math.max(2550, (t === 'sheet4' ? 7650 : 11050) * a);
+  if ($('mclear').checked && t !== 'sheet4') base *= 1.1;
+  const shapeName = shape === 'round' ? ', скруглённые углы' : '';
+  add(`Зеркало ${M_NAME[t]}, ${size} мм${shapeName}${$('mclear').checked ? ', осветлённое' : ''}`, base);
+  if (shape === 'circle' && t !== 'sheet4' && t !== 'sheet6') add('Круглая форма', 1700);
+  if (lit) {
+    if (t === 'both') add('Вторая линия подсветки', 1700);
+    if ($('mcct').checked) add('Три режима света', 1700);
+    if (!$('msensor').checked) add('Механическая кнопка вместо сенсора', -850);
+  }
+  if (t === 'plain' && $('mlamp').checked) add('Сенсор под светильники клиента', 2720);
+  if ($('mheat').checked && t !== 'sheet4' && t !== 'sheet6') add('Подогрев', 4250);
+  if ($('malice').checked && t !== 'sheet4' && t !== 'sheet6') add('Колонка с Алисой', 20400);
+  return lines;
+}
+
 function calc() {
   const item = document.querySelector('input[name=item]:checked').value;
+  if (item === 'mirror') return calcMirrorTotal();
   const mat = document.querySelector('input[name=mat]:checked').value;
   const w = Math.max(300, num('width', 800));
   const h = Math.max(600, num('height', 1900));
@@ -256,11 +320,49 @@ function calc() {
     `Предоплата 70%: ${rub(prepay)}`, `Срок изготовления: ~${days} дней`].join('\n');
 }
 
+function render(lines, pay, beznal, prepay, days) {
+  $('lines').replaceChildren(...lines.map(([n, s]) => {
+    const d = document.createElement('div'); d.className = 'line';
+    const a = document.createElement('span'); a.textContent = n;
+    const b = document.createElement('span'); b.textContent = rub(s);
+    d.append(a, b); return d;
+  }));
+  $('total-lbl').textContent = beznal ? 'Итого, безнал' : 'Итого, наличные / перевод';
+  $('total').textContent = rub(pay);
+  $('prepay').textContent = rub(prepay);
+  $('days').textContent = days;
+}
+
+function calcMirrorTotal() {
+  const w = Math.max(200, num('width', 800));
+  const h = Math.max(200, num('height', 1000));
+  const beznal = $('beznal').checked;
+  const f = beznal ? MB : 1;
+  const lines = calcMirror(w, h).map(([n, s]) => [n, r100(s * f)]);
+  const pay = lines.reduce((s, l) => s + l[1], 0);
+  const prepay = Math.ceil(pay * 0.7 / 1000) * 1000;
+  const days = '~14–16 дней';
+  render(lines, pay, beznal, prepay, days);
+  return [...lines.map(([n, s]) => `${n} — ${rub(s)}`), '',
+    `Итого${beznal ? ' (безнал)' : ''}: ${rub(pay)}`,
+    `Предоплата 70%: ${rub(prepay)}`, `Срок изготовления: ${days}`].join('\n');
+}
+
 let text = '';
+let lastItem = 'tumba';
 function update() {
-  const pen = document.querySelector('input[name=item]:checked').value === 'pen';
-  $('height-wrap').hidden = !pen;
-  document.querySelectorAll('.tumba-only').forEach(el => { el.hidden = pen; });
+  const item = document.querySelector('input[name=item]:checked').value;
+  const pen = item === 'pen', mirror = item === 'mirror';
+  if (item !== lastItem) {
+    if (mirror) { $('width').value = 800; $('height').value = 1000; }
+    else if (pen) { $('width').value = 500; $('height').value = 1900; }
+    else if (lastItem !== 'tumba') { $('width').value = 800; }
+    lastItem = item;
+  }
+  $('height-wrap').hidden = !(pen || mirror);
+  document.querySelectorAll('.tumba-only').forEach(el => { el.hidden = pen || mirror; });
+  document.querySelectorAll('.furn-only').forEach(el => { el.hidden = mirror; });
+  document.querySelectorAll('.mirror-only').forEach(el => { el.hidden = !mirror; });
   text = calc();
   $('copied').textContent = '';
 }
