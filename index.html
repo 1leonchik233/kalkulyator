@@ -108,7 +108,8 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
         </div>
         <div class="row">
           <label class="f" for="width">Ширина, мм<input type="number" id="width" min="200" max="3000" step="10" value="800"></label>
-          <label class="f" for="height" id="height-wrap" hidden>Высота, мм<input type="number" id="height" min="200" max="3000" step="10" value="1900"></label>
+          <label class="f" for="height" id="height-wrap" hidden>Высота, мм<input type="number" id="height" min="200" max="3000" step="10" value="560"></label>
+          <label class="f furn-only" for="fdepth">Глубина, мм<input type="number" id="fdepth" min="150" max="900" step="10" value="470"></label>
           <label class="f furn-only" for="drawers">Ящиков<input type="number" id="drawers" min="0" max="8" value="2"></label>
           <label class="f furn-only" for="doors">Дверей<input type="number" id="doors" min="0" max="6" value="0"></label>
           <label class="f furn-only" for="open">Открытых секций<input type="number" id="open" min="0" max="4" value="0"></label>
@@ -320,7 +321,9 @@ function calc() {
   if (item === 'shower') return calcShowerTotal();
   const mat = document.querySelector('input[name=mat]:checked').value;
   const w = Math.max(300, num('width', 800));
-  const h = Math.max(600, num('height', 1900));
+  const h = Math.max(200, num('height', item === 'pen' ? 1900 : 560));
+  const fd = Math.max(150, num('fdepth', item === 'pen' ? 400 : 470));
+  const grow = (v, base, e) => 1 + e * Math.max(0, v / base - 1);
   const drawers = Math.max(0, num('drawers', 2));
   const doors = Math.max(0, num('doors', 0));
   const open = Math.max(0, num('open', 0));
@@ -331,12 +334,12 @@ function calc() {
 
   if (item === 'pen') {
     // базовый пенал — корпус с одной дверью и полками
-    add(`Пенал ${w}×${h} мм, ${MAT_NAME[mat]}, дверей: ${Math.max(1, doors)}`, 33000 * h / 1000 * Math.max(1, w / 600) * k);
+    add(`Пенал ${w}×${fd}×${h} мм, ${MAT_NAME[mat]}, дверей: ${Math.max(1, doors)}`, 33000 * h / 1000 * Math.max(1, w / 600) * grow(fd, 400, 0.3) * k);
     if (doors > 1) add(`Дополнительные двери: ${doors - 1}`, 1500 * (doors - 1));
     if (drawers > 0) add(`Ящики: ${drawers}`, 7000 * drawers * k);
     if (open > 0) add(`Открытые секции: ${open}`, 3000 * open);
   } else {
-    add(`Тумба ${w} мм, ${MAT_NAME[mat]}, ящиков: ${drawers}`, interp(w) * k);
+    add(`Тумба ${w}×${fd}×${h} мм, ${MAT_NAME[mat]}, ящиков: ${drawers}`, interp(w) * grow(h, 560, 0.5) * grow(fd, 470, 0.3) * k);
     if (drawers > 2) add(`Дополнительные ящики: ${drawers - 2}`, 7000 * (drawers - 2) * k);
     if (doors > 0) add(`Распашные двери: ${doors}`, 1500 * doors);
     if (open > 0) add(`Открытые секции: ${open}`, 3000 * open);
@@ -493,7 +496,7 @@ function drawSketch(item) {
   const handle = (x, y, w) => line(x + w * 0.35, y + 6, x + w * 0.65, y + 6, 'stroke-width="3" stroke-linecap="round" opacity=".55"');
 
   if (item === 'tumba' || item === 'pen') {
-    const realH = item === 'pen' ? H : 560;
+    const realH = H;
     const b = box(W, realH), x = X0, y = Y0;
     const drawers = Math.max(0, num('drawers', 0)), doors = Math.max(0, num('doors', 0)), open = Math.max(0, num('open', 0));
     rect(x, y, b.w, b.h, thick);
@@ -510,8 +513,8 @@ function drawSketch(item) {
     }
     if (open) txt(x + b.w / 2, y + b.h - openH / 2 + 4, 'открыто', 'opacity=".6"');
     dimH(x, x + b.w, y + b.h + 14, `${W}`);
-    dimV(y, y + b.h, x - 14, item === 'pen' ? `${H}` : 'H');
-    cap = item === 'pen' ? `Пенал ${W}×${H} мм, вид спереди` : `Тумба ${W} мм, вид спереди (высота по проекту)`;
+    dimV(y, y + b.h, x - 14, `${H}`);
+    cap = `${item === 'pen' ? 'Пенал' : 'Тумба'} ${W}×${num('fdepth', 470)}×${H} мм (Ш×Г×В), вид спереди`;
   } else if (item === 'mirror') {
     const shape = document.querySelector('input[name=mshape]:checked').value;
     const hh = shape === 'circle' ? W : H;
@@ -582,11 +585,11 @@ function update() {
   if (item !== lastItem) {
     if (mirror) { $('width').value = 800; $('height').value = 1000; }
     else if (shower) { $('width').value = 800; $('height').value = 2000; }
-    else if (pen) { $('width').value = 500; $('height').value = 1900; $('drawers').value = 0; $('doors').value = 1; $('open').value = 0; }
-    else { $('width').value = 800; $('drawers').value = 2; $('doors').value = 0; $('open').value = 0; }
+    else if (pen) { $('width').value = 500; $('height').value = 1900; $('fdepth').value = 400; $('drawers').value = 0; $('doors').value = 1; $('open').value = 0; }
+    else { $('width').value = 800; $('height').value = 560; $('fdepth').value = 470; $('drawers').value = 2; $('doors').value = 0; $('open').value = 0; }
     lastItem = item;
   }
-  $('height-wrap').hidden = !(pen || mirror || shower);
+  $('height-wrap').hidden = false;
   document.querySelectorAll('.tumba-only').forEach(el => { el.hidden = pen || mirror || shower; });
   document.querySelectorAll('.furn-only').forEach(el => { el.hidden = mirror || shower; });
   document.querySelectorAll('.mirror-only').forEach(el => { el.hidden = !mirror; });
