@@ -104,9 +104,9 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
         <div class="row">
           <label class="f" for="width">Ширина, мм<input type="number" id="width" min="200" max="3000" step="10" value="800"></label>
           <label class="f" for="height" id="height-wrap" hidden>Высота, мм<input type="number" id="height" min="200" max="3000" step="10" value="1900"></label>
-          <label class="f tumba-only" for="drawers">Ящиков<input type="number" id="drawers" min="0" max="8" value="2"></label>
-          <label class="f tumba-only" for="doors">Дверей<input type="number" id="doors" min="0" max="6" value="0"></label>
-          <label class="f tumba-only" for="open">Открытых секций<input type="number" id="open" min="0" max="4" value="0"></label>
+          <label class="f furn-only" for="drawers">Ящиков<input type="number" id="drawers" min="0" max="8" value="2"></label>
+          <label class="f furn-only" for="doors">Дверей<input type="number" id="doors" min="0" max="6" value="0"></label>
+          <label class="f furn-only" for="open">Открытых секций<input type="number" id="open" min="0" max="4" value="0"></label>
         </div>
       </fieldset>
 
@@ -169,10 +169,10 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
         <div class="chks">
           <label class="chk furn-only" for="freza"><input type="checkbox" id="freza"><span>Фрезеровка фасадов<small>+2 500 ₽ за фасад, +14 дней</small></span></label>
           <label class="chk furn-only" for="ral"><input type="checkbox" id="ral"><span>Цвет по RAL не из наличия<small>+25 000 ₽</small></span></label>
-          <label class="chk tumba-only" for="push"><input type="checkbox" id="push"><span>Push Blum<small>+18 000 ₽</small></span></label>
-          <label class="chk tumba-only" for="hettich"><input type="checkbox" id="hettich"><span>Ящики Hettich / Blum<small>+5 000 ₽ за ящик</small></span></label>
+          <label class="chk furn-only" for="push"><input type="checkbox" id="push"><span>Push Blum<small>+18 000 ₽</small></span></label>
+          <label class="chk furn-only" for="hettich"><input type="checkbox" id="hettich"><span>Ящики Hettich / Blum<small>+5 000 ₽ за ящик</small></span></label>
           <label class="chk furn-only" for="back"><input type="checkbox" id="back"><span>Задняя стенка<small>тумба +2 000 ₽, пенал +8 000 ₽</small></span></label>
-          <label class="chk tumba-only" for="hidden"><input type="checkbox" id="hidden"><span>Скрытый ящик<small>+5 000 ₽</small></span></label>
+          <label class="chk furn-only" for="hidden"><input type="checkbox" id="hidden"><span>Скрытый ящик<small>+5 000 ₽</small></span></label>
           <label class="chk furn-only" for="light"><input type="checkbox" id="light"><span>Подсветка врезная<small>+4 000 ₽ за секцию</small></span></label>
           <label class="chk" for="beznal"><input type="checkbox" id="beznal"><span>Оплата по безналу<small>мебель +10%, зеркала по безналичной цене</small></span></label>
         </div>
@@ -286,10 +286,14 @@ function calc() {
   const k = MAT[mat];
   const lines = [];
   const add = (n, s) => lines.push([n, r100(s)]);
-  const fronts = item === 'pen' ? 2 : Math.max(1, drawers + doors);
+  const fronts = Math.max(1, drawers + doors);
 
   if (item === 'pen') {
-    add(`Пенал ${w}×${h} мм, ${MAT_NAME[mat]}`, 33000 * h / 1000 * Math.max(1, w / 600) * k);
+    // базовый пенал — корпус с одной дверью и полками
+    add(`Пенал ${w}×${h} мм, ${MAT_NAME[mat]}, дверей: ${Math.max(1, doors)}`, 33000 * h / 1000 * Math.max(1, w / 600) * k);
+    if (doors > 1) add(`Дополнительные двери: ${doors - 1}`, 1500 * (doors - 1));
+    if (drawers > 0) add(`Ящики: ${drawers}`, 7000 * drawers * k);
+    if (open > 0) add(`Открытые секции: ${open}`, 3000 * open);
   } else {
     add(`Тумба ${w} мм, ${MAT_NAME[mat]}, ящиков: ${drawers}`, interp(w) * k);
     if (drawers > 2) add(`Дополнительные ящики: ${drawers - 2}`, 7000 * (drawers - 2) * k);
@@ -298,11 +302,11 @@ function calc() {
   }
   if ($('freza').checked) add(`Фрезеровка фасадов: ${fronts}`, 2500 * fronts);
   if ($('ral').checked) add('Цвет по RAL', 25000);
-  if (item === 'tumba' && $('push').checked) add('Push Blum', 18000);
-  if (item === 'tumba' && $('hettich').checked) add(`Ящики Hettich / Blum: ${drawers}`, 5000 * drawers);
+  if ($('push').checked) add('Push Blum', 18000);
+  if ($('hettich').checked && drawers > 0) add(`Ящики Hettich / Blum: ${drawers}`, 5000 * drawers);
   if ($('back').checked) add('Задняя стенка', item === 'pen' ? 8000 : 2000);
-  if (item === 'tumba' && $('hidden').checked) add('Скрытый ящик', 5000);
-  if ($('light').checked) add('Подсветка врезная', 4000 * (item === 'pen' ? 1 : Math.max(1, open)));
+  if ($('hidden').checked) add('Скрытый ящик', 5000);
+  if ($('light').checked) add('Подсветка врезная', 4000 * Math.max(1, open));
 
   if (item === 'tumba') {
     const t = $('top').value;
@@ -396,8 +400,8 @@ function update() {
   const pen = item === 'pen', mirror = item === 'mirror';
   if (item !== lastItem) {
     if (mirror) { $('width').value = 800; $('height').value = 1000; }
-    else if (pen) { $('width').value = 500; $('height').value = 1900; }
-    else if (lastItem !== 'tumba') { $('width').value = 800; }
+    else if (pen) { $('width').value = 500; $('height').value = 1900; $('drawers').value = 0; $('doors').value = 1; $('open').value = 0; }
+    else { $('width').value = 800; $('drawers').value = 2; $('doors').value = 0; $('open').value = 0; }
     lastItem = item;
   }
   $('height-wrap').hidden = !(pen || mirror);
