@@ -89,7 +89,7 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
 <div class="wrap">
   <header>
     <h1>Калькулятор <span>ПРОГРЕСС</span></h1>
-    <p class="sub">Тумбы под раковину, пеналы и столешницы из акрила. Цены для клиента, 2026.</p>
+    <p class="sub">Тумбы, пеналы, зеркала, душевые ограждения и столешницы. Цены для клиента, 2026.</p>
   </header>
 
   <div class="grid">
@@ -100,6 +100,7 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
           <label><input type="radio" name="item" id="item-tumba" value="tumba" checked><span>Тумба</span></label>
           <label><input type="radio" name="item" id="item-pen" value="pen"><span>Пенал</span></label>
           <label><input type="radio" name="item" id="item-mirror" value="mirror"><span>Зеркало</span></label>
+          <label><input type="radio" name="item" id="item-shower" value="shower"><span>Душевая</span></label>
         </div>
         <div class="row">
           <label class="f" for="width">Ширина, мм<input type="number" id="width" min="200" max="3000" step="10" value="800"></label>
@@ -139,6 +140,40 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
           <label class="chk" for="mtint"><input type="checkbox" id="mtint"><span>Тонированное стекло<small>бронза, графит</small></span></label>
         </div>
         <p class="note">Круг: ширина = диаметр. Рамы и нестандартные формы (арка, овал, фигурные вырезы) — уточняйте у производства.</p>
+      </fieldset>
+
+      <fieldset class="shower-only" hidden>
+        <legend>Душевое ограждение</legend>
+        <label class="f" for="stype">Тип
+          <select id="stype">
+            <option value="niche" selected>Дверь в нишу</option>
+            <option value="doorfix">Дверь + неподвижная часть</option>
+            <option value="double">Двустворчатая дверь в нишу</option>
+            <option value="corner">Угловое (дверь + 2 неподвижные)</option>
+            <option value="slide">Раздвижное угловое</option>
+            <option value="bath">Шторка на ванну</option>
+          </select>
+        </label>
+        <div class="row">
+          <label class="f" for="sdepth" id="sdepth-wrap" hidden>Боковая сторона, мм<input type="number" id="sdepth" min="200" max="2500" step="10" value="800"></label>
+          <label class="f" for="sglass">Стекло 8 мм
+            <select id="sglass">
+              <option value="clear">Прозрачное</option>
+              <option value="opti" selected>Осветлённое</option>
+              <option value="moru">Рифлёное (мору)</option>
+            </select>
+          </label>
+          <label class="f" for="scolor">Фурнитура
+            <select id="scolor">
+              <option value="chrome" selected>Хром</option>
+              <option value="brushed">Шлифованная сталь</option>
+              <option value="gold">Матовое золото</option>
+              <option value="black">Чёрный матовый</option>
+            </select>
+          </label>
+          <label class="f" for="sshelves">Стеклянных полок<input type="number" id="sshelves" min="0" max="10" value="0"></label>
+        </div>
+        <p class="note">Ширина — общая ширина проёма (для углового — фронт). Тонированное стекло, фрезеровка, нестандартные формы — уточняйте у производства.</p>
       </fieldset>
 
       <fieldset class="furn-only">
@@ -277,6 +312,7 @@ function calcMirror(w, h) {
 function calc() {
   const item = document.querySelector('input[name=item]:checked').value;
   if (item === 'mirror') return calcMirrorTotal();
+  if (item === 'shower') return calcShowerTotal();
   const mat = document.querySelector('input[name=mat]:checked').value;
   const w = Math.max(300, num('width', 800));
   const h = Math.max(600, num('height', 1900));
@@ -393,23 +429,67 @@ function calcMirrorTotal() {
     `Предоплата 70%: ${rub(prepay)}`, `Срок изготовления: ${days}`].join('\n');
 }
 
+// Душевые ограждения: розничные ставки при оплате наличными / переводом (стекло 8 мм закалённое).
+const S_GLASS = { clear: 13175, opti: 16490, moru: 27200 };
+const S_GLASS_NAME = { clear: 'прозрачное', opti: 'осветлённое', moru: 'рифлёное (мору)' };
+const S_KIT = { niche: 31450, bath: 23800, doorfix: 37400, double: 35020, corner: 47600, slide: 40800 };
+const S_NAME = { niche: 'Дверь в нишу', bath: 'Шторка на ванну', doorfix: 'Дверь + неподвижная часть',
+  double: 'Двустворчатая дверь в нишу', corner: 'Угловое ограждение (дверь + 2 неподвижные)', slide: 'Раздвижное угловое' };
+const S_COLOR = { chrome: [1, 'хром'], brushed: [1, 'шлифованная сталь'], gold: [1.35, 'матовое золото'], black: [1.35, 'чёрный матовый'] };
+
+function calcShowerTotal() {
+  const t = $('stype').value;
+  const w = Math.max(200, num('width', 800));
+  const h = Math.max(300, num('height', 2000));
+  const d = Math.max(0, num('sdepth', 800));
+  const corner = t === 'corner' || t === 'slide';
+  const area = (corner ? w + d : w) * h / 1e6;
+  const g = $('sglass').value, c = S_COLOR[$('scolor').value];
+  const beznal = $('beznal').checked;
+  const f = beznal ? MB : 1 / 0.95;
+  const shelves = Math.max(0, num('sshelves', 0));
+  const size = corner ? `${w}×${d}, H${h}` : `${w}×${h}`;
+  const goods = [
+    [`${S_NAME[t]} ${size} мм, стекло 8 мм ${S_GLASS_NAME[g]}`, r100(area * S_GLASS[g] * f)],
+    [`Фурнитура, цвет: ${c[1]}`, r100(S_KIT[t] * c[0] * f)]
+  ];
+  if (shelves > 0) goods.push([`Полки из закалённого стекла: ${shelves} шт`, r100(4250 * shelves * f)]);
+  const gsum = goods.reduce((s, l) => s + l[1], 0);
+  if (!beznal) goods.push(['Скидка за оплату наличными / переводом (5%)', -r100(gsum * 0.05)]);
+  const km = Math.max(0, num('skm', 0));
+  if ($('smount').checked) goods.push(['Доставка, подъём и монтаж' + (km ? ` (+${km} км за МКАД)` : ''), 12000 + 100 * km]);
+  else if ($('sdeliv').checked) goods.push(['Доставка до подъезда' + (km ? ` (+${km} км за МКАД)` : ''), 4000 + 100 * km]);
+  if ($('smeasure').checked) goods.push(['Замер (в пределах МКАД)', 2500]);
+  const pay = goods.reduce((s, l) => s + l[1], 0);
+  const prepay = Math.ceil(pay * 0.7 / 1000) * 1000;
+  const days = '~7–10 дней';
+  render(goods, pay, beznal, prepay, days);
+  return [...goods.map(([n, s]) => `${n} — ${rub(s)}`), '',
+    `Итого${beznal ? ' (безнал)' : ''}: ${rub(pay)}`,
+    `Предоплата 70%: ${rub(prepay)}`, `Срок изготовления: ${days}`].join('\n');
+}
+
 let text = '';
 let lastItem = 'tumba';
 function update() {
   const item = document.querySelector('input[name=item]:checked').value;
-  const pen = item === 'pen', mirror = item === 'mirror';
+  const pen = item === 'pen', mirror = item === 'mirror', shower = item === 'shower';
   if (item !== lastItem) {
     if (mirror) { $('width').value = 800; $('height').value = 1000; }
+    else if (shower) { $('width').value = 800; $('height').value = 2000; }
     else if (pen) { $('width').value = 500; $('height').value = 1900; $('drawers').value = 0; $('doors').value = 1; $('open').value = 0; }
     else { $('width').value = 800; $('drawers').value = 2; $('doors').value = 0; $('open').value = 0; }
     lastItem = item;
   }
-  $('height-wrap').hidden = !(pen || mirror);
-  document.querySelectorAll('.tumba-only').forEach(el => { el.hidden = pen || mirror; });
-  document.querySelectorAll('.furn-only').forEach(el => { el.hidden = mirror; });
+  $('height-wrap').hidden = !(pen || mirror || shower);
+  document.querySelectorAll('.tumba-only').forEach(el => { el.hidden = pen || mirror || shower; });
+  document.querySelectorAll('.furn-only').forEach(el => { el.hidden = mirror || shower; });
   document.querySelectorAll('.mirror-only').forEach(el => { el.hidden = !mirror; });
-  $('sdeliv-note').textContent = mirror ? '5 500 ₽, за МКАД +100 ₽/км' : '2 500 ₽, за МКАД +40 ₽/км';
-  $('smount-note').textContent = mirror ? '5 000 ₽, большие зеркала (от 1,5 м²) — уточнять' : '5 000 ₽, заказ дороже 50 000 ₽ — 10%';
+  document.querySelectorAll('.shower-only').forEach(el => { el.hidden = !shower; });
+  const corner = ['corner', 'slide'].includes($('stype').value);
+  $('sdepth-wrap').hidden = !(shower && corner);
+  $('sdeliv-note').textContent = mirror ? '5 500 ₽, за МКАД +100 ₽/км' : shower ? 'до подъезда 4 000 ₽ (без монтажа), за МКАД +100 ₽/км' : '2 500 ₽, за МКАД +40 ₽/км';
+  $('smount-note').textContent = mirror ? '5 000 ₽, большие зеркала (от 1,5 м²) — уточнять' : shower ? 'доставка + подъём + монтаж 12 000 ₽ за изделие' : '5 000 ₽, заказ дороже 50 000 ₽ — 10%';
   text = calc();
   $('copied').textContent = '';
 }
