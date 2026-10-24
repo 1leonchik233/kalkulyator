@@ -166,12 +166,14 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
               <option value="clear">Прозрачное</option>
               <option value="opti" selected>Осветлённое</option>
               <option value="moru">Рифлёное (мору)</option>
+              <option value="matte">Матовое осветлённое</option>
             </select>
           </label>
           <label class="f" for="scolor">Фурнитура
             <select id="scolor">
               <option value="chrome" selected>Хром</option>
               <option value="brushed">Шлифованная сталь</option>
+              <option value="bronze">Бронза</option>
               <option value="gold">Матовое золото</option>
               <option value="black">Чёрный матовый</option>
             </select>
@@ -439,12 +441,12 @@ function calcMirrorTotal() {
 }
 
 // Душевые ограждения: розничные ставки при оплате наличными / переводом (стекло 8 мм закалённое).
-const S_GLASS = { clear: 13175, opti: 16490, moru: 27200 };
-const S_GLASS_NAME = { clear: 'прозрачное', opti: 'осветлённое', moru: 'рифлёное (мору)' };
+const S_GLASS = { clear: 13175, opti: 16490, moru: 27200, matte: 20400 };
+const S_GLASS_NAME = { clear: 'прозрачное', opti: 'осветлённое', moru: 'рифлёное (мору)', matte: 'матовое осветлённое' };
 const S_KIT = { niche: 31450, bath: 23800, doorfix: 37400, double: 35020, corner: 47600, slide: 40800 };
 const S_NAME = { niche: 'Дверь в нишу', bath: 'Шторка на ванну', doorfix: 'Дверь + неподвижная часть',
   double: 'Двустворчатая дверь в нишу', corner: 'Угловое ограждение (дверь + 2 неподвижные)', slide: 'Раздвижное угловое' };
-const S_COLOR = { chrome: [1, 'хром'], brushed: [1, 'шлифованная сталь'], gold: [1.35, 'матовое золото'], black: [1.35, 'чёрный матовый'] };
+const S_COLOR = { chrome: [1, 'хром'], brushed: [1, 'шлифованная сталь'], bronze: [1, 'бронза'], gold: [1.35, 'матовое золото'], black: [1.35, 'чёрный матовый'] };
 
 function calcShowerTotal() {
   const t = $('stype').value;
