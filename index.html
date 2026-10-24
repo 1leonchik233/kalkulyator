@@ -209,7 +209,7 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
       <fieldset>
         <legend>Опции</legend>
         <div class="chks">
-          <label class="chk furn-only" for="freza"><input type="checkbox" id="freza"><span>Фрезеровка фасадов<small>+2 500 ₽ за фасад, +14 дней</small></span></label>
+          <label class="chk furn-only" for="freza"><input type="checkbox" id="freza"><span>Фрезеровка фасадов<small>+2 500 ₽ за фасад, срок 45 дней</small></span></label>
           <label class="chk furn-only" for="ral"><input type="checkbox" id="ral"><span>Цвет по RAL не из наличия<small>+25 000 ₽</small></span></label>
           <label class="chk furn-only" for="push"><input type="checkbox" id="push"><span>Push Blum<small>+18 000 ₽</small></span></label>
           <label class="chk furn-only" for="hettich"><input type="checkbox" id="hettich"><span>Ящики Hettich / Blum<small>+5 000 ₽ за ящик</small></span></label>
@@ -224,12 +224,13 @@ textarea.fallback { width: 100%; min-height: 140px; font: inherit; font-size: 13
         <div class="chks">
           <label class="chk" for="sdeliv"><input type="checkbox" id="sdeliv"><span>Доставка по Москве<small id="sdeliv-note">2 500 ₽</small></span></label>
           <label class="chk" for="smount"><input type="checkbox" id="smount"><span>Монтаж<small id="smount-note">5 000 ₽, заказ дороже 50 000 ₽ — 10%</small></span></label>
+          <label class="chk furn-only" for="slift"><input type="checkbox" id="slift"><span>Подъём<small>1 000 ₽</small></span></label>
           <label class="chk mirror-only" for="sdemount" hidden><input type="checkbox" id="sdemount"><span>Демонтаж старого зеркала<small>6 500 ₽</small></span></label>
           <label class="chk" for="smeasure"><input type="checkbox" id="smeasure"><span>Замер<small>2 500 ₽ в пределах МКАД</small></span></label>
         </div>
         <div class="row">
           <label class="f" for="skm">Км за МКАД<input type="number" id="skm" min="0" max="300" value="0"></label>
-          <label class="f" for="sfloors">Подъём по лестнице, этажей<input type="number" id="sfloors" min="0" max="30" value="0"></label>
+          <label class="f mirror-only" for="sfloors" hidden>Подъём по лестнице, этажей<input type="number" id="sfloors" min="0" max="30" value="0"></label>
         </div>
       </fieldset>
     </form>
@@ -369,11 +370,10 @@ function calc() {
   const extra = beznal ? r100(cash * 0.1) : 0;
   if (disc) lines.push(['Скидка за оплату наличными / переводом (5%)', -disc]);
   if (extra) lines.push(['Надбавка за безналичную оплату (10%)', extra]);
-  const svc = services(false, cash, 0);
+  const svc = services(false, cash - disc, 0);  // монтаж 10% — от суммы со скидкой
   lines.push(...svc);
   const pay = (cash - disc + extra) + svc.reduce((s, l) => s + l[1], 0);
-  let days = (mat === 'emal' || mat === 'shpon') ? 45 : 30;
-  if ($('freza').checked) days += 14;
+  let days = (mat === 'emal' || mat === 'shpon' || $('freza').checked) ? 45 : 30;  // плёнка без фрезеровки 30, иначе 45
   if ($('ral').checked) days = Math.max(days, 45);
   const prepay = Math.ceil(pay * 0.7 / 5000) * 5000;
 
@@ -399,10 +399,11 @@ function services(mirror, goods, area) {
   const km = Math.max(0, num('skm', 0)), floors = Math.max(0, num('sfloors', 0));
   if ($('sdeliv').checked) out.push(['Доставка по Москве' + (km ? ` + ${km} км за МКАД` : ''),
     mirror ? 5500 + 100 * km : 2500 + 40 * km]);
-  if ($('smount').checked) out.push([mirror && area > 1.5 ? 'Монтаж от (большое зеркало — цену уточнить)' : 'Монтаж', mirror ? 5000 : (goods > 50000 ? r100(goods * 0.1) : 5000)]);
+  if ($('smount').checked) out.push([mirror && area > 1.5 ? 'Монтаж от (большое зеркало — цену уточнить)' : 'Монтаж', mirror ? 5000 : (goods > 50000 ? Math.round(goods * 0.1) : 5000)]);
   if (mirror && $('sdemount').checked) out.push(['Демонтаж старого зеркала', 6500]);
   if ($('smeasure').checked) out.push(['Замер (в пределах МКАД)', 2500]);
-  if (floors > 0) out.push([`Подъём по лестнице: ${floors} эт.`, (mirror ? 1000 : 500) * floors]);
+  if (mirror && floors > 0) out.push([`Подъём по лестнице: ${floors} эт.`, 1000 * floors]);
+  if (!mirror && $('slift').checked) out.push(['Подъём', 1000]);
   return out;
 }
 
