@@ -455,7 +455,7 @@ function calcShowerTotal() {
   const area = (corner ? w + d : w) * h / 1e6;
   const g = $('sglass').value, c = S_COLOR[$('scolor').value];
   const beznal = $('beznal').checked;
-  const f = 1 / 0.95;  // базовая цена; нал −5%, безнал +20%
+  const f = beznal ? 1 : 1 / 0.95;  // нал: базовая цена −5%; безнал: цена за наличные +20%
   const shelves = Math.max(0, num('sshelves', 0));
   const size = corner ? `${w}×${d}, H${h}` : `${w}×${h}`;
   const goods = [
